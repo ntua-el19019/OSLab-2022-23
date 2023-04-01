@@ -6,7 +6,7 @@ CC = gcc
 CFLAGS = -g -Wall -O2
 SHELL= /bin/bash
 
-tree-example: tree-example.o tree.o
+tree-example: tree-example.o tree.o proc-common.o
 	$(CC) $(CFLAGS) $^ -o $@
 
 fork-example: fork-example.o proc-common.o

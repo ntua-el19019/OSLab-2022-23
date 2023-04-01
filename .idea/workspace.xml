@@ -22,9 +22,8 @@
   <component name="ChangeListManager">
     <list default="true" id="9ef285ef-2ed9-4780-8eac-846c49057df9" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/forktree/ask2-fork" beforeDir="false" afterPath="$PROJECT_DIR$/forktree/ask2-fork" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/forktree/ask2-fork.c" beforeDir="false" afterPath="$PROJECT_DIR$/forktree/ask2-fork.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/forktree/ask2-fork.o" beforeDir="false" afterPath="$PROJECT_DIR$/forktree/ask2-fork.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/forktree/Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/forktree/Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/forktree/tree-example.c" beforeDir="false" afterPath="$PROJECT_DIR$/forktree/tree-example.c" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,7 +96,7 @@
       <workItem from="1680289607183" duration="96000" />
       <workItem from="1680289766974" duration="18000" />
       <workItem from="1680328128326" duration="109000" />
-      <workItem from="1680328238507" duration="6900000" />
+      <workItem from="1680328238507" duration="10627000" />
     </task>
     <servers />
   </component>
