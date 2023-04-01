@@ -23,26 +23,9 @@ void fork_procs(void)
 
     int status;
 	change_pname("A");
-	printf("A: Sleeping...\n");
 //    sleep(SLEEP_PROC_SEC);
 
     pid_t pidC,pidB,pidD;
-    pidC = fork();
-    if (pidC < 0) {
-        perror("main: fork");
-        exit(1);
-    }
-    if (pidC== 0) {
-
-        change_pname("C");
-        printf("C: Sleeping...\n");
-        sleep(SLEEP_PROC_SEC);
-        exit(17);
-        }
-    pidC = wait(&status);
-    explain_wait_status(pidC, status);
-
-
 
 
     /* Fork root of process tree */
@@ -55,7 +38,8 @@ void fork_procs(void)
 
         change_pname("B");
         printf("B: Sleeping...\n");
-        sleep(SLEEP_PROC_SEC);
+//        sleep(SLEEP_PROC_SEC);
+
 
         pidD = fork();
         if (pidD < 0) {
@@ -66,17 +50,41 @@ void fork_procs(void)
             /* Child */
             change_pname("D");
             printf("D: Sleeping...\n");
-//            sleep(SLEEP_PROC_SEC);
+            sleep(SLEEP_PROC_SEC);
+            printf("D: Exiting...\n");
             exit(13);
         }
 
         pidD = wait(&status);
         explain_wait_status(pidD, status);
+        printf("B: Exiting...\n");
+        exit(19);
     }
+
+    pidC = fork();
+    if (pidC < 0) {
+        perror("main: fork");
+        exit(1);
+    }
+    if (pidC== 0) {
+
+        change_pname("C");
+        printf("C: Sleeping...\n");
+        sleep(SLEEP_PROC_SEC);
+        printf("C: Exiting...\n");
+        exit(17);
+    }
+    pidC = wait(&status);
+    explain_wait_status(pidC, status);
+
 
     pidB = wait(&status);
     explain_wait_status(pidB, status);
-    exit(19);
+
+//
+//    pidB = wait(&status);
+//    explain_wait_status(pidB, status);
+
 
 
 	/* ... */
@@ -104,15 +112,19 @@ int main(void)
 
 	/* Fork root of process tree */
 	pidA = fork();
+    change_pname("A");
 	if (pidA < 0) {
 		perror("main: fork");
 		exit(1);
 	}
 	if (pidA== 0) {
+        printf("A: Sleeping...\n");
+//        sleep(SLEEP_PROC_SEC);
 		/* Child */
 		fork_procs();
 
 	}
+
 
 	/*
 	 * Father
@@ -126,12 +138,14 @@ int main(void)
 	/* Print the process tree root at pid */
 	show_pstree(pidA);
 
+    pidA = wait(&status);
+    explain_wait_status(pidA, status);
+
+
 	/* for ask2-signals */
 	/* kill(pid, SIGCONT); */
 
 	/* Wait for the root of the process tree to terminate */
-	pidA = wait(&status);
-	explain_wait_status(pidA, status);
 
 	return 0;
 }
