@@ -28,7 +28,7 @@ void fproc(struct tree_node *root) {
                 exit(10);
             }
         }
-        ;
+
     for(int i=0; i<root->nr_children; i++) {
         pid = wait(&status);
         explain_wait_status(pid, status);

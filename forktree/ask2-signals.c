@@ -9,30 +9,73 @@
 #include "tree.h"
 #include "proc-common.h"
 
-void fork_procs(struct tree_node *root)
-{
-	/*
-	 * Start
-	 */
-	printf("PID = %ld, name %s, starting...\n",
-			(long)getpid(), root->name);
-	change_pname(root->name);
 
-	/* ... */
 
-	/*
-	 * Suspend Self
-	 */
-	raise(SIGSTOP);
-	printf("PID = %ld, name = %s is awake\n",
-		(long)getpid(), root->name);
 
-	/* ... */
 
-	/*
-	 * Exit
-	 */
-	exit(0);
+void fork_procs(struct tree_node *root) {
+    /*
+     * Start
+     */
+    int status;
+    printf("PID = %ld, name %s, starting...\n",
+           (long) getpid(), root->name);
+    change_pname(root->name);
+
+
+    if (root->nr_children == 0) {
+
+        raise(SIGSTOP);
+        exit(2); /* 2 = For leaf nodes */
+    } else {
+        pid_t pid[root->nr_children];
+        for (int i = 0; i < root->nr_children; i++) {
+
+            pid[i] = fork();
+            if (pid < 0) {
+                perror("main: fork");
+                exit(1);
+            }
+            if (pid[i] == 0) {
+                fork_procs(root->children + i);
+                exit(10);
+            }
+        }
+
+
+        wait_for_ready_children(root->nr_children);
+        raise(SIGSTOP);
+
+
+        for (int i = 0; i <root->nr_children; i++) {
+            printf("Waking the process:%s...\n", root->children[i].name);
+            kill(pid[i], SIGCONT);
+            pid[i] = wait(&status);
+
+            explain_wait_status(pid[i],status);
+
+        }
+
+
+
+
+
+
+
+
+
+        /*
+         * Suspend Self
+         */
+
+
+        /* ... */
+
+        /*
+         * Exit
+         */
+        exit(8); /* 8 = For non-leaf nodes */
+    }
 }
 
 /*
@@ -87,6 +130,7 @@ int main(int argc, char *argv[])
 	show_pstree(pid);
 
 	/* for ask2-signals */
+    printf("Waking the process:%s...\n", root->name);
 	kill(pid, SIGCONT);
 
 	/* Wait for the root of the process tree to terminate */
