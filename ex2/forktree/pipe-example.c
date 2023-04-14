@@ -14,10 +14,11 @@
 #include "proc-common.h"
 #include "tree.h"
 
-void fork_procs(struct tree_node *root, int pfd[2]) {
+void fork_procs(struct tree_node *root, int desc) {
     /*
      * Start
      */
+    pid_t pid;
     int status;
     int val[2];
     int res;
@@ -28,14 +29,13 @@ void fork_procs(struct tree_node *root, int pfd[2]) {
 
 
     if (root->nr_children == 0) {
+        int name=atoi(root->name);
 
-        int val_name= atoi(root->name);
-        close(pfd[0]);
-
-        if(write(pfd[1], &val_name, sizeof(val_name))!=sizeof(val_name)){
+        if(write(desc, &name, sizeof(name))!=sizeof(name)){
             perror("child number: write to pipe");
             exit(1);
         } // Write the value into the pipe
+        close(desc);
 
 
         sleep(3);
@@ -44,15 +44,13 @@ void fork_procs(struct tree_node *root, int pfd[2]) {
 
 
     else {
-        pid_t pid;
+
         int pfd_child[2];
         if (pipe(pfd_child) < 0) {
             perror("pipe");
             exit(1);
         }
         for (int i = 0; i < root->nr_children; i++) {
-
-
             pid = fork();
             if (pid < 0) {
                 perror("main: fork");
@@ -60,19 +58,19 @@ void fork_procs(struct tree_node *root, int pfd[2]) {
             }
             if (pid == 0) {
                 close(pfd_child[0]);
-                fork_procs(root->children + i, pfd_child);
+                fork_procs(root->children + i, pfd_child[1]);
 
             }
 
         }
 
-
+        close(pfd_child[1]);
 
 
 
         for(int i=0; i < root->nr_children; i++) { //wait for all children values
 
-            if (read(pfd[0], &val[i], sizeof(val[i])) != sizeof(val[i])) {
+            if (read(pfd_child[0], &val[i], sizeof(val[i])) != sizeof(val[i])) {
 
                 perror("read from pipe");
                 exit(1);
@@ -80,7 +78,7 @@ void fork_procs(struct tree_node *root, int pfd[2]) {
             printf("Parent %s: received value %d from the pipe.\n", root->name,val[i]);
 
         }
-        close(pfd[0]);
+        close(pfd_child[0]);
 
 
         // Close the read end of the pipe
@@ -96,19 +94,19 @@ void fork_procs(struct tree_node *root, int pfd[2]) {
             printf("Parent: %d * %d = %d,value1*value2\n",val[0],val[1],res);
         }
 
-        if((write(pfd[1], &res, sizeof(res)))!=sizeof(res)){
+        if((write(desc, &res, sizeof(res)))!=sizeof(res)){
             perror("parent: write to pipe");
             exit(1);
         } // Write the value into the pipe
 
-        close(pfd[1]);
+        close(desc);
 
 
         for (int i = 0; i < root->nr_children; i++) {
             pid = wait(&status);
+
             explain_wait_status(pid, status);
         }
-
 
 
 
@@ -119,7 +117,7 @@ void fork_procs(struct tree_node *root, int pfd[2]) {
 
 
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	pid_t p;
 	int pfd[2];
@@ -128,7 +126,7 @@ int main(void)
     struct tree_node *root;
 
     /* Read tree into memory */
-    root = get_tree_from_file("expr.tree");
+    root = get_tree_from_file(argv[1]);
 	
 	printf("Parent: Creating pipe...\n");
 	if (pipe(pfd) < 0) {
@@ -144,20 +142,24 @@ int main(void)
 		exit(1);
 	}
 	if (p == 0) {
+        close(pfd[0]);
 		/* In child process */
-        fork_procs(root,pfd);
+        fork_procs(root,pfd[1]);
 		/*
 		 * Should never reach this point,
 		 * child() does not return
 		 */
 
 	}
+
     show_pstree(p);
-    sleep(10);
+
+
 
 	/* Wait for the child to terminate */
 	printf("Parent: Created child with PID = %ld, waiting for it to terminate...\n",
 		(long)p);
+
 
     if((read(pfd[0], &res, sizeof(res) )!= sizeof(res))){
         perror("parent: read from pipe");
@@ -165,7 +167,8 @@ int main(void)
     } // Read the value from the pipe
     close(pfd[0]);
 
-    printf("Parent: received value %d from the pipe.\n", res);
+    printf("Final result: %d .\n", res);
+
 
     p = wait(&status);
     explain_wait_status(p, status);
