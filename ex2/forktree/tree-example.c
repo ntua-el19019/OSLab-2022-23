@@ -9,11 +9,12 @@
 void fproc(struct tree_node *root) {
     int status;
     change_pname(root->name);
+    printf("%s: Starting...\n", root->name);
 
     if (root->nr_children == 0) {
         printf("%s: Sleeping...\n", root->name);
-        printf("%s: Exiting...\n", root->name);
         sleep(3);
+        printf("%s: Exiting...\n", root->name);
         exit(8);
     } else {
         pid_t pid;
@@ -33,6 +34,7 @@ void fproc(struct tree_node *root) {
         pid = wait(&status);
         explain_wait_status(pid, status);
     }
+    printf("%s: Exiting...\n", root->name);
 
     }
 }
@@ -64,7 +66,7 @@ int main(int argc, char *argv[])
     }
 
     show_pstree(initial);
-    sleep(10);
+
 
     initial=wait(&status);
     explain_wait_status(initial, status);

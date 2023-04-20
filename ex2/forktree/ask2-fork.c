@@ -23,7 +23,6 @@ void fork_procs(void)
 
     int status;
 	change_pname("A");
-//    sleep(SLEEP_PROC_SEC);
 
     pid_t pidC,pidB,pidD;
 
@@ -38,7 +37,7 @@ void fork_procs(void)
 
         change_pname("B");
         printf("B: Sleeping...\n");
-//        sleep(SLEEP_PROC_SEC);
+
 
 
         pidD = fork();
@@ -81,9 +80,6 @@ void fork_procs(void)
     pidB = wait(&status);
     explain_wait_status(pidB, status);
 
-//
-//    pidB = wait(&status);
-//    explain_wait_status(pidB, status);
 
 
 
@@ -119,7 +115,6 @@ int main(void)
 	}
 	if (pidA== 0) {
         printf("A: Sleeping...\n");
-//        sleep(SLEEP_PROC_SEC);
 		/* Child */
 		fork_procs();
 
@@ -136,7 +131,7 @@ int main(void)
 	sleep(SLEEP_TREE_SEC);
 
 	/* Print the process tree root at pid */
-	show_pstree(pidA);
+	show_pstree(getpid());
 
     pidA = wait(&status);
     explain_wait_status(pidA, status);

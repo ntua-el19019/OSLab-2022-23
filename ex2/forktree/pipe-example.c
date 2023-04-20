@@ -81,7 +81,7 @@ void fork_procs(struct tree_node *root, int desc) {
         close(pfd_child[0]);
 
 
-        // Close the read end of the pipe
+        /* Close the read end of the pipe */
 
         printf("Parent: received value1 %d and value2 %d from the pipe. Will now compute.\n", val[0],val[1]);
 
@@ -97,7 +97,7 @@ void fork_procs(struct tree_node *root, int desc) {
         if((write(desc, &res, sizeof(res)))!=sizeof(res)){
             perror("parent: write to pipe");
             exit(1);
-        } // Write the value into the pipe
+        } /* Write the value into the pipe */
 
         close(desc);
 
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
     if((read(pfd[0], &res, sizeof(res) )!= sizeof(res))){
         perror("parent: read from pipe");
         exit(1);
-    } // Read the value from the pipe
+    } /* Read the value from the pipe */
     close(pfd[0]);
 
     printf("Final result: %d .\n", res);
