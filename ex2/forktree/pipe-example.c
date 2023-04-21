@@ -68,6 +68,10 @@ void fork_procs(struct tree_node *root, int desc) {
 
 
 
+        for (int i = 0; i < root->nr_children; i++) {
+            pid = wait(&status);
+            explain_wait_status(pid, status);
+        }
         for(int i=0; i < root->nr_children; i++) { //wait for all children values
 
             if (read(pfd_child[0], &val[i], sizeof(val[i])) != sizeof(val[i])) {
@@ -102,11 +106,7 @@ void fork_procs(struct tree_node *root, int desc) {
         close(desc);
 
 
-        for (int i = 0; i < root->nr_children; i++) {
-            pid = wait(&status);
 
-            explain_wait_status(pid, status);
-        }
 
 
 
@@ -151,6 +151,7 @@ int main(int argc, char *argv[])
 		 */
 
 	}
+
 
     show_pstree(p);
 
