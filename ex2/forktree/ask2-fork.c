@@ -131,7 +131,7 @@ int main(void)
 	sleep(SLEEP_TREE_SEC);
 
 	/* Print the process tree root at pid */
-	show_pstree(getpid());
+	show_pstree(pidA);
 
     pidA = wait(&status);
     explain_wait_status(pidA, status);
