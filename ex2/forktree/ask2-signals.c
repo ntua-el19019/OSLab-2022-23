@@ -38,7 +38,7 @@ void fork_procs(struct tree_node *root) {
             }
             if (pid[i] == 0) {
                 fork_procs(root->children + i);
-                exit(10);
+
             }
         }
 
