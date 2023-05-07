@@ -10,18 +10,31 @@
 #include <assert.h>
 #include <string.h>
 #include <math.h>
+#include <pthread.h>
+#include <errno.h>
 #include <stdlib.h>
+#include <semaphore.h>
 
 #include "mandel-lib.h"
 
 #define MANDEL_MAX_ITERATION 100000
+#define perror_pthread(ret, msg) \
+	do { errno = ret; perror(msg); } while (0)
+
+typedef struct {
+    int fd;
+    sem_t *sem;
+    int thr_id;
+    int number_of_threads;
+} thread_args;
+
 
 /***************************
  * Compile-time parameters *
  ***************************/
 
 /*
- * Output at the terminal is is x_chars wide by y_chars long
+ * Output at the terminal is x_chars wide by y_chars long
 */
 int y_chars = 50;
 int x_chars = 90;
@@ -44,6 +57,8 @@ double ystep;
  * This function computes a line of output
  * as an array of x_char color values.
  */
+
+
 void compute_mandel_line(int line, int color_val[])
 {
 	/*
@@ -98,31 +113,83 @@ void output_mandel_line(int fd, int color_val[])
 	}
 }
 
-void compute_and_output_mandel_line(int fd, int line)
-{
-	/*
-	 * A temporary array, used to hold color values for the line being drawn
-	 */
-	int color_val[x_chars];
 
-	compute_mandel_line(line, color_val);
-	output_mandel_line(fd, color_val);
+void *compute_and_output_mandel_line_threaded(void *args){
+    int color_val[x_chars];
+    int fd = ((thread_args *)args)->fd;
+    int thr_id = ((thread_args *)args)->thr_id;
+    sem_t sem = *((thread_args *)args)->sem;
+    int number_of_threads = ((thread_args *)args)->number_of_threads;
+
+
+    for(int i=thr_id; i<y_chars; i+=number_of_threads){
+        compute_mandel_line(i, color_val);
+        sem_wait(&sem);
+
+        output_mandel_line(fd, color_val);
+        sem_post(&sem);
+    }
+    return 0;
 }
 
-int main(void)
-{
-	int line;
+int main(int argc, char *argv[]) {
+    int ret;
+    int NTHREADS;
+    NTHREADS = atoi(argv[1]);
+    pthread_t threads[NTHREADS];
+    sem_t sem[NTHREADS];
 
-	xstep = (xmax - xmin) / x_chars;
-	ystep = (ymax - ymin) / y_chars;
+    if (argc != 2) {
+        printf("Usage: %s <NTHREADS> \n", argv[0]);
+        exit(1);
+    }
 
-	/*
-	 * draw the Mandelbrot Set, one line at a time.
-	 * Output is sent to file descriptor '1', i.e., standard output.
-	 */
-	for (line = 0; line < y_chars; line++) {
-		compute_and_output_mandel_line(1, line);
-	}
+
+    thread_args targs[NTHREADS];
+    for(int i=0; i<NTHREADS; i++){
+       targs[i].fd = 1;
+       targs[i].thr_id = i;
+       targs[i].sem = &sem[i];
+       targs[i].number_of_threads = NTHREADS;
+
+    }
+
+
+    xstep = (xmax - xmin) / x_chars;
+    ystep = (ymax - ymin) / y_chars;
+
+
+    for(int i=0; i<NTHREADS; i++){
+        if (sem_init(&sem[i], 0, 1) != 0) {
+            perror("sem_init");
+            exit(1);
+        }
+    }
+
+    /*
+     * draw the Mandelbrot Set, one line at a time.
+     * Output is sent to file descriptor '1', i.e., standard output.
+     */
+
+    for(int i=0; i<NTHREADS; i++){
+        ret = pthread_create(&threads[0], NULL, compute_and_output_mandel_line_threaded,&targs[i]);
+        if (ret) {
+            perror_pthread(ret, "pthread_create");
+            exit(1);
+        }
+    }
+
+
+
+    for (int i = 0; i < NTHREADS; i++) {
+        ret = pthread_join(threads[i], NULL);
+        if (ret) perror_pthread(ret, "pthread_join");
+    }
+
+    for (int i = 0; i < NTHREADS; i++) {
+        ret = sem_destroy(&sem[i]);
+        if (ret) perror("sem_destroy");
+    }
 
 	reset_xterm_color(1);
 	return 0;

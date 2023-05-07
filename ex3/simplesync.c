@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
+
 /* 
  * POSIX thread functions do not return error numbers in errno,
  * but in the actual return value of the function call instead.
@@ -36,6 +37,8 @@
 # define USE_ATOMIC_OPS 0
 #endif
 
+pthread_mutex_t lock;
+
 void *increase_fn(void *arg)
 {
 	int i;
@@ -46,12 +49,14 @@ void *increase_fn(void *arg)
 		if (USE_ATOMIC_OPS) {
 			/* ... */
 			/* You can modify the following line */
-			++(*ip);
+            __sync_fetch_and_add(&ip, 1);
 			/* ... */
 		} else {
 			/* ... */
+            pthread_mutex_lock(&lock);
 			/* You cannot modify the following line */
 			++(*ip);
+            pthread_mutex_unlock(&lock);
 			/* ... */
 		}
 	}
@@ -70,12 +75,14 @@ void *decrease_fn(void *arg)
 		if (USE_ATOMIC_OPS) {
 			/* ... */
 			/* You can modify the following line */
-			--(*ip);
+            __sync_fetch_and_add(&ip, -1);
 			/* ... */
 		} else {
 			/* ... */
+            pthread_mutex_lock(&lock);
 			/* You cannot modify the following line */
 			--(*ip);
+            pthread_mutex_unlock(&lock);
 			/* ... */
 		}
 	}
@@ -98,6 +105,10 @@ int main(int argc, char *argv[])
 	/*
 	 * Create threads
 	 */
+    if (pthread_mutex_init(&lock, NULL) != 0) {
+        printf("\n mutex init has failed\n");
+        return 1;
+    }
 	ret = pthread_create(&t1, NULL, increase_fn, &val);
 	if (ret) {
 		perror_pthread(ret, "pthread_create");
@@ -118,6 +129,8 @@ int main(int argc, char *argv[])
 	ret = pthread_join(t2, NULL);
 	if (ret)
 		perror_pthread(ret, "pthread_join");
+
+    pthread_mutex_destroy(&lock);
 
 	/*
 	 * Is everything OK?
