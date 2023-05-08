@@ -49,13 +49,13 @@ void *increase_fn(void *arg)
 		if (USE_ATOMIC_OPS) {
 			/* ... */
 			/* You can modify the following line */
-            __sync_fetch_and_add(&ip, 1);
+            __sync_fetch_and_add(&ip, 1); /*Critical section*/
 			/* ... */
 		} else {
 			/* ... */
             pthread_mutex_lock(&lock);
 			/* You cannot modify the following line */
-			++(*ip);
+			++(*ip); /*Critical section*/
             pthread_mutex_unlock(&lock);
 			/* ... */
 		}
@@ -75,13 +75,13 @@ void *decrease_fn(void *arg)
 		if (USE_ATOMIC_OPS) {
 			/* ... */
 			/* You can modify the following line */
-            __sync_fetch_and_add(&ip, -1);
+            __sync_fetch_and_add(&ip, -1); /*Critical section*/
 			/* ... */
 		} else {
 			/* ... */
             pthread_mutex_lock(&lock);
 			/* You cannot modify the following line */
-			--(*ip);
+			--(*ip); /*Critical section*/
             pthread_mutex_unlock(&lock);
 			/* ... */
 		}
