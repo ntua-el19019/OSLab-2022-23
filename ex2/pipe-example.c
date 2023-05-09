@@ -21,7 +21,7 @@ void fork_procs(struct tree_node *root, int desc) {
     pid_t pid;
     int status;
     int val[2];
-    int res;
+    int res,i;
 
     printf("PID = %ld, name %s, starting...\n",
            (long) getpid(), root->name);
@@ -71,11 +71,11 @@ void fork_procs(struct tree_node *root, int desc) {
 
 
 
-        for (int i = 0; i < root->nr_children; i++) {
+        for (i = 0; i < root->nr_children; i++) {
             pid = wait(&status);
             explain_wait_status(pid, status);
         }
-        for(int i=0; i < root->nr_children; i++) { //wait for all children values
+        for(i=0; i < root->nr_children; i++) { //wait for all children values
 
             if (read(pfd_child[0], &val[i], sizeof(val[i])) != sizeof(val[i])) {
 

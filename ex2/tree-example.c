@@ -7,7 +7,7 @@
 #include "proc-common.h"
 
 void fproc(struct tree_node *root) {
-    int status;
+    int status,i;
     change_pname(root->name);
     printf("%s: Starting...\n", root->name);
 
@@ -19,7 +19,7 @@ void fproc(struct tree_node *root) {
 
     } else {
         pid_t pid;
-        for (int i=0; i<root->nr_children; i++){
+        for (i=0; i<root->nr_children; i++){
             pid=fork();
             if (pid < 0) {
                 perror("main: fork");
@@ -31,7 +31,7 @@ void fproc(struct tree_node *root) {
             }
         }
 
-    for(int i=0; i<root->nr_children; i++) {
+    for(i=0; i<root->nr_children; i++) {
         pid = wait(&status);
         explain_wait_status(pid, status);
     }

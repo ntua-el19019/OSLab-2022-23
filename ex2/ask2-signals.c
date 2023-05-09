@@ -17,7 +17,7 @@ void fork_procs(struct tree_node *root) {
     /*
      * Start
      */
-    int status;
+    int status,i;
     printf("PID = %ld, name %s, starting...\n",
            (long) getpid(), root->name);
     change_pname(root->name);
@@ -29,7 +29,7 @@ void fork_procs(struct tree_node *root) {
         exit(2); /* 2 = For leaf nodes */
     } else {
         pid_t pid[root->nr_children];
-        for (int i = 0; i < root->nr_children; i++) {
+        for (i = 0; i < root->nr_children; i++) {
 
             pid[i] = fork();
             if (pid < 0) {
@@ -45,7 +45,7 @@ void fork_procs(struct tree_node *root) {
 
         wait_for_ready_children(root->nr_children);
         raise(SIGSTOP);
-        for (int i = 0; i <root->nr_children; i++) {
+        for (i = 0; i <root->nr_children; i++) {
             printf("Waking the process:%s...\n", root->children[i].name);
             kill(pid[i], SIGCONT);
             pid[i] = wait(&status);
