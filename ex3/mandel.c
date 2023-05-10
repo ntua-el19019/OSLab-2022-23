@@ -7,14 +7,11 @@
 
 #include <stdio.h>
 #include <unistd.h>
-#include <assert.h>
 #include <string.h>
-#include <math.h>
 #include <pthread.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <semaphore.h>
-
 #include "mandel-lib.h"
 
 #define MANDEL_MAX_ITERATION 100000
@@ -118,16 +115,17 @@ void *compute_and_output_mandel_line_threaded(void *args){
     int color_val[x_chars];
     int fd = ((thread_args *)args)->fd;
     int thr_id = ((thread_args *)args)->thr_id;
-    sem_t sem = *((thread_args *)args)->sem;
+    sem_t *sem = ((thread_args *)args)->sem;
     int number_of_threads = ((thread_args *)args)->number_of_threads;
 
 
     for(int i=thr_id; i<y_chars; i+=number_of_threads){
-        compute_mandel_line(i, color_val);
-        sem_wait(&sem);
 
+        compute_mandel_line(i, color_val);
+
+        sem_wait(&sem[i]);
         output_mandel_line(fd, color_val);
-        sem_post(&sem);
+        sem_post(&sem[i+1]);
     }
     return 0;
 }
@@ -137,7 +135,15 @@ int main(int argc, char *argv[]) {
     int NTHREADS;
     NTHREADS = atoi(argv[1]);
     pthread_t threads[NTHREADS];
-    sem_t sem[NTHREADS];
+    sem_t sem[y_chars];
+
+    for (int i = 0; i <= y_chars; i++) {
+        if (i == 0) {
+            sem_init(&sem[i], 0, 1);
+        } else {
+            sem_init(&sem[i], 0, 0);
+        }
+    }
 
     if (argc != 2) {
         printf("Usage: %s <NTHREADS> \n", argv[0]);
@@ -149,7 +155,7 @@ int main(int argc, char *argv[]) {
     for(int i=0; i<NTHREADS; i++){
        targs[i].fd = 1;
        targs[i].thr_id = i;
-       targs[i].sem = &sem[i];
+       targs[i].sem = sem;
        targs[i].number_of_threads = NTHREADS;
 
     }
@@ -159,12 +165,6 @@ int main(int argc, char *argv[]) {
     ystep = (ymax - ymin) / y_chars;
 
 
-    for(int i=0; i<NTHREADS; i++){
-        if (sem_init(&sem[i], 0, 1) != 0) {
-            perror("sem_init");
-            exit(1);
-        }
-    }
 
     /*
      * draw the Mandelbrot Set, one line at a time.
@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
      */
 
     for(int i=0; i<NTHREADS; i++){
-        ret = pthread_create(&threads[0], NULL, compute_and_output_mandel_line_threaded,&targs[i]);
+        ret = pthread_create(&threads[i], NULL, compute_and_output_mandel_line_threaded,&targs[i]);
         if (ret) {
             perror_pthread(ret, "pthread_create");
             exit(1);
@@ -186,7 +186,8 @@ int main(int argc, char *argv[]) {
         if (ret) perror_pthread(ret, "pthread_join");
     }
 
-    for (int i = 0; i < NTHREADS; i++) {
+
+    for(int i=0; i<y_chars; i++) {
         ret = sem_destroy(&sem[i]);
         if (ret) perror("sem_destroy");
     }
