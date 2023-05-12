@@ -20,9 +20,11 @@
 
 typedef struct {
     int fd;
-    sem_t *sem;
     int thr_id;
     int number_of_threads;
+    int *running;
+    pthread_mutex_t* mutex;
+    pthread_cond_t* cond;
 } thread_args;
 
 
@@ -115,7 +117,9 @@ void *compute_and_output_mandel_line_threaded(void *args){
     int color_val[x_chars];
     int fd = ((thread_args *)args)->fd;
     int thr_id = ((thread_args *)args)->thr_id;
-    sem_t *sem = ((thread_args *)args)->sem;
+    int *running= ((thread_args *)args)->running;
+    pthread_mutex_t *mutex= ((thread_args *)args)->mutex;
+    pthread_cond_t *cond= ((thread_args *)args)->cond;
     int number_of_threads = ((thread_args *)args)->number_of_threads;
 
 
@@ -123,9 +127,20 @@ void *compute_and_output_mandel_line_threaded(void *args){
 
         compute_mandel_line(i, color_val);
 
-        sem_wait(&sem[i]);
+        pthread_mutex_lock(mutex);
+        while ((*running) !=thr_id){
+            pthread_cond_wait(cond, mutex);
+        }
         output_mandel_line(fd, color_val);
-        sem_post(&sem[i+1]);
+        (*running)=((*running)+1)%number_of_threads;
+
+        pthread_cond_broadcast(cond);
+        pthread_mutex_unlock(mutex);
+
+
+
+
+
     }
     return 0;
 }
@@ -135,27 +150,28 @@ int main(int argc, char *argv[]) {
     int NTHREADS;
     NTHREADS = atoi(argv[1]);
     pthread_t threads[NTHREADS];
-    sem_t sem[y_chars];
+    int running=0;
+    pthread_cond_t cond=PTHREAD_COND_INITIALIZER;
+    pthread_mutex_t mutex=PTHREAD_MUTEX_INITIALIZER;
 
-    for (int i = 0; i <= y_chars; i++) {
-        if (i == 0) {
-            sem_init(&sem[i], 0, 1);
-        } else {
-            sem_init(&sem[i], 0, 0);
-        }
-    }
 
     if (argc != 2) {
         printf("Usage: %s <NTHREADS> \n", argv[0]);
         exit(1);
     }
 
+//    for (int i = 0; i < NTHREADS+1; i++) {
+//        pthread_mutex_init(&mutex[i], NULL);
+//    }
 
     thread_args targs[NTHREADS];
+
     for(int i=0; i<NTHREADS; i++){
        targs[i].fd = 1;
        targs[i].thr_id = i;
-       targs[i].sem = sem;
+       targs[i].running = &running;
+       targs[i].mutex = &mutex;
+       targs[i].cond = &cond;
        targs[i].number_of_threads = NTHREADS;
 
     }
@@ -187,10 +203,7 @@ int main(int argc, char *argv[]) {
     }
 
 
-    for(int i=0; i<y_chars; i++) {
-        ret = sem_destroy(&sem[i]);
-        if (ret) perror("sem_destroy");
-    }
+
 
 	reset_xterm_color(1);
 	return 0;
