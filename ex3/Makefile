@@ -9,7 +9,7 @@ CC = gcc
 CFLAGS = -Wall -O2 -pthread
 LIBS =
 
-all: pthread-test simplesync-mutex simplesync-atomic kgarten mandel
+all: pthread-test simplesync-mutex simplesync-atomic kgarten mandel-sem mandel-var
 
 ## Pthread test
 pthread-test: pthread-test.o
@@ -39,15 +39,22 @@ kgarten.o: kgarten.c
 	$(CC) $(CFLAGS) -c -o kgarten.o kgarten.c
 
 
-## Mandel
-mandel: mandel-lib.o mandel.o
-	$(CC) $(CFLAGS) -o mandel mandel-lib.o mandel.o $(LIBS)
+## Mandel-Sem
+mandel-sem: mandel-lib.o mandel-sem.o
+	$(CC) $(CFLAGS) -o mandel-sem mandel-lib.o mandel-sem.o $(LIBS)
 
 mandel-lib.o: mandel-lib.h mandel-lib.c
 	$(CC) $(CFLAGS) -c -o mandel-lib.o mandel-lib.c $(LIBS)
 
-mandel.o: mandel.c
-	$(CC) $(CFLAGS) -c -o mandel.o mandel.c $(LIBS)
+mandel-sem.o: mandel-sem.c
+	$(CC) $(CFLAGS) -c -o mandel-sem.o mandel-sem.c $(LIBS)
+
+## Mandel-Var
+mandel-var: mandel-lib.o mandel-var.o
+	$(CC) $(CFLAGS) -o mandel-var mandel-lib.o mandel-var.o $(LIBS)
+
+mandel-var.o: mandel-var.c
+	$(CC) $(CFLAGS) -c -o mandel-var.o mandel-var.c $(LIBS)
 
 clean:
 	rm -f *.s *.o pthread-test simplesync-{atomic,mutex} kgarten mandel 
