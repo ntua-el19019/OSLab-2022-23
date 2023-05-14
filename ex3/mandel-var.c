@@ -137,10 +137,6 @@ void *compute_and_output_mandel_line_threaded(void *args){
         pthread_cond_broadcast(cond);
         pthread_mutex_unlock(mutex);
 
-
-
-
-
     }
     return 0;
 }

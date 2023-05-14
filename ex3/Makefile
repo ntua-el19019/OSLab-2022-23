@@ -1,6 +1,6 @@
 #
 # Makefile
-# 
+#
 
 CC = gcc
 
@@ -31,6 +31,13 @@ simplesync-mutex.o: simplesync.c
 simplesync-atomic.o: simplesync.c
 	$(CC) $(CFLAGS) -DSYNC_ATOMIC -c -o simplesync-atomic.o simplesync.c
 
+simplesync-mutex.s: simplesync.c
+	$(CC) $(CFLAGS) -DSYNC_MUTEX -S -g -c -o simplesync-mutex.s simplesync.c
+
+simplesync-atomic.s: simplesync.c
+	$(CC) $(CFLAGS) -DSYNC_ATOMIC -S -g -c -o simplesync-atomic.s simplesync.c
+
+
 ## Kindergarten
 kgarten: kgarten.o
 	$(CC) $(CFLAGS) -o kgarten kgarten.o $(LIBS)
@@ -57,4 +64,6 @@ mandel-var.o: mandel-var.c
 	$(CC) $(CFLAGS) -c -o mandel-var.o mandel-var.c $(LIBS)
 
 clean:
-	rm -f *.s *.o pthread-test simplesync-{atomic,mutex} kgarten mandel 
+	rm -f *.s *.o pthread-test simplesync-{atomic,mutex} kgarten mandel
+
+
