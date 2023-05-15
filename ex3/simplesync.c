@@ -51,7 +51,8 @@ void *increase_fn(void *arg)
 			/* You can modify the following line */
             __sync_fetch_and_add(&ip, 1); /*Critical section*/
 			/* ... */
-		} else {
+		}
+        else {
 			/* ... */
             pthread_mutex_lock(&lock);
 			/* You cannot modify the following line */
@@ -87,7 +88,7 @@ void *decrease_fn(void *arg)
 		}
 	}
 	fprintf(stderr, "Done decreasing variable.\n");
-	
+
 	return NULL;
 }
 

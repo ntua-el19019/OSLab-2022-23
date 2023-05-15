@@ -120,12 +120,11 @@ void *compute_and_output_mandel_line_threaded(void *args){
 
 
     for(int i=thr_id; i<y_chars; i+=number_of_threads){
-
         compute_mandel_line(i, color_val);
 
-        sem_wait(&sem[i]);
+        sem_wait(&sem[(thr_id)%number_of_threads]);
         output_mandel_line(fd, color_val);
-        sem_post(&sem[i+1]);
+        sem_post(&sem[(thr_id+1)%number_of_threads]);
     }
     return 0;
 }
@@ -135,9 +134,10 @@ int main(int argc, char *argv[]) {
     int NTHREADS;
     NTHREADS = atoi(argv[1]);
     pthread_t threads[NTHREADS];
-    sem_t sem[y_chars];
+    sem_t sem[NTHREADS];
 
-    for (int i = 0; i <= y_chars; i++) {
+
+    for (int i = 0; i <NTHREADS; i++) {
         if (i == 0) {
             sem_init(&sem[i], 0, 1);
         } else {
