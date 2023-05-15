@@ -146,19 +146,15 @@ int main(int argc, char *argv[]) {
     int NTHREADS;
     NTHREADS = atoi(argv[1]);
     pthread_t threads[NTHREADS];
-    int running=0;
     pthread_cond_t cond=PTHREAD_COND_INITIALIZER;
     pthread_mutex_t mutex=PTHREAD_MUTEX_INITIALIZER;
+    int running=0;
 
 
     if (argc != 2) {
         printf("Usage: %s <NTHREADS> \n", argv[0]);
         exit(1);
     }
-
-//    for (int i = 0; i < NTHREADS+1; i++) {
-//        pthread_mutex_init(&mutex[i], NULL);
-//    }
 
     thread_args targs[NTHREADS];
 
