@@ -18,6 +18,7 @@
 #define perror_pthread(ret, msg) \
 	do { errno = ret; perror(msg); } while (0)
 
+/* A struct for passing arguments to threads */
 typedef struct {
     int fd;
     int thr_id;
@@ -112,7 +113,10 @@ void output_mandel_line(int fd, int color_val[])
 	}
 }
 
-
+/* This function computes(this in parallel) and outputs the mandelbrot lines
+* The subset of lines is determined by the thread ID and the total number of threads.
+* This function uses a mutex and a condition variable to ensure that the threads output their lines
+* in the correct order. */
 void *compute_and_output_mandel_line_threaded(void *args){
     int color_val[x_chars];
     int fd = ((thread_args *)args)->fd;
@@ -122,19 +126,27 @@ void *compute_and_output_mandel_line_threaded(void *args){
     pthread_cond_t *cond= ((thread_args *)args)->cond;
     int number_of_threads = ((thread_args *)args)->number_of_threads;
 
-
+    /*
+     * Each thread computes and outputs a subset of the lines.
+     * If there are N threads, thread 0 handles lines 0, N, 2N, 3N, etc.,
+     * thread 1 handles lines 1, N+1, 2N+1, 3N+1, etc., and so on.
+     */
     for(int i=thr_id; i<y_chars; i+=number_of_threads){
 
         compute_mandel_line(i, color_val);
 
         pthread_mutex_lock(mutex);
+        /* Wait for the condition variable if another thread is currently writing its line */
         while ((*running) !=thr_id){
-            pthread_cond_wait(cond, mutex);
+            pthread_cond_wait(cond, mutex); /* critical section */
         }
         output_mandel_line(fd, color_val);
+        /* Update the running variable to match the id of the next thread (Round-Robin fashion) */
         (*running)=((*running)+1)%number_of_threads;
 
+        /* Broadcast to all waiting threads that the condition has changed */
         pthread_cond_broadcast(cond);
+
         pthread_mutex_unlock(mutex);
 
     }
@@ -189,14 +201,17 @@ int main(int argc, char *argv[]) {
 
 
 
+    /* The main thread waits for all the worker threads to finish */
     for (int i = 0; i < NTHREADS; i++) {
         ret = pthread_join(threads[i], NULL);
         if (ret) perror_pthread(ret, "pthread_join");
     }
 
+    /* Clean up the condition variable and the mutex */
+    pthread_cond_destroy(&cond);
+    pthread_mutex_destroy(&mutex);
 
-
-
+    /* Reset the terminal to original state */
 	reset_xterm_color(1);
 	return 0;
 }

@@ -18,6 +18,7 @@
 #define perror_pthread(ret, msg) \
 	do { errno = ret; perror(msg); } while (0)
 
+/* A struct for passing arguments to threads */
 typedef struct {
     int fd;
     sem_t *sem;
@@ -110,20 +111,34 @@ void output_mandel_line(int fd, int color_val[])
 	}
 }
 
-
+/* This function is the entry point for each thread. It computes and outputs lines of the Mandelbrot set */
 void *compute_and_output_mandel_line_threaded(void *args){
+    /* The color values for the line currently being computed */
     int color_val[x_chars];
     int fd = ((thread_args *)args)->fd;
     int thr_id = ((thread_args *)args)->thr_id;
+    /* The array of semaphores used for synchronizing the threads */
     sem_t *sem = ((thread_args *)args)->sem;
     int number_of_threads = ((thread_args *)args)->number_of_threads;
 
 
+    /*
+     * Each thread computes and outputs a subset of the lines.
+     * If there are N threads, thread 0 handles lines 0, N, 2N, 3N, etc.,
+     * thread 1 handles lines 1, N+1, 2N+1, 3N+1, etc., and so forth.
+     */
     for(int i=thr_id; i<y_chars; i+=number_of_threads){
         compute_mandel_line(i, color_val);
 
+        /*
+         * Wait for the semaphore corresponding to this thread to become available.*/
         sem_wait(&sem[(thr_id)%number_of_threads]);
         output_mandel_line(fd, color_val);
+        /*
+         * Signal the next thread in the order that it can now output its line
+         * (Round Robin fashion).
+         * If this is the last thread, we wrap around to the first one.
+         */
         sem_post(&sem[(thr_id+1)%number_of_threads]);
     }
     return 0;
@@ -132,11 +147,14 @@ void *compute_and_output_mandel_line_threaded(void *args){
 int main(int argc, char *argv[]) {
     int ret;
     int NTHREADS;
+    /* The number of threads is read from the program's arguments */
     NTHREADS = atoi(argv[1]);
     pthread_t threads[NTHREADS];
     sem_t sem[NTHREADS];
 
 
+    /* The semaphores are initialized, the first semaphore's value
+     * is equal to 1 so it can start */
     for (int i = 0; i <NTHREADS; i++) {
         if (i == 0) {
             sem_init(&sem[i], 0, 1);
@@ -180,18 +198,23 @@ int main(int argc, char *argv[]) {
     }
 
 
-
+    /* The main thread waits for all the worker threads to finish */
     for (int i = 0; i < NTHREADS; i++) {
         ret = pthread_join(threads[i], NULL);
         if (ret) perror_pthread(ret, "pthread_join");
     }
 
 
+    /* The semaphores are destroyed */
     for(int i=0; i<y_chars; i++) {
         ret = sem_destroy(&sem[i]);
         if (ret) perror("sem_destroy");
     }
 
+    /* Clean up the mutex, not necessary, the os does it automatically */
+    pthread_mutex_destroy(&mutex);
+
+    /* Reset the terminals color */
 	reset_xterm_color(1);
 	return 0;
 }
