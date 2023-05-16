@@ -211,9 +211,6 @@ int main(int argc, char *argv[]) {
         if (ret) perror("sem_destroy");
     }
 
-    /* Clean up the mutex, not necessary, the os does it automatically */
-    pthread_mutex_destroy(&mutex);
-
     /* Reset the terminals color */
 	reset_xterm_color(1);
 	return 0;
