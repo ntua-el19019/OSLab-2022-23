@@ -138,9 +138,9 @@ void *compute_and_output_mandel_line_threaded(void *args){
         pthread_mutex_lock(mutex);
         /* Wait for the condition variable if another thread is currently writing its line */
         while ((*running) !=thr_id){
-            pthread_cond_wait(cond, mutex); /* critical section */
+            pthread_cond_wait(cond, mutex);
         }
-        output_mandel_line(fd, color_val);
+        output_mandel_line(fd, color_val); /* critical section */
         /* Update the running variable to match the id of the next thread (Round-Robin fashion) */
         (*running)=((*running)+1)%number_of_threads;
 
