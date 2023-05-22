@@ -133,7 +133,8 @@ void *compute_and_output_mandel_line_threaded(void *args){
         /*
          * Wait for the semaphore corresponding to this thread to become available.*/
         sem_wait(&sem[(thr_id)%number_of_threads]);
-        output_mandel_line(fd, color_val);
+
+        output_mandel_line(fd, color_val); /* critical section */
         /*
          * Signal the next thread in the order that it can now output its line
          * (Round Robin fashion).

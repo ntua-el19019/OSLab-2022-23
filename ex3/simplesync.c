@@ -111,15 +111,15 @@ int main(int argc, char *argv[])
         return 1;
     }
 	ret = pthread_create(&t1, NULL, increase_fn, &val);
-	if (ret) {
-		perror_pthread(ret, "pthread_create");
-		exit(1);
-	}
+    if (ret) {
+        perror_pthread(ret, "pthread_create");
+        exit(1);
+    }
 	ret = pthread_create(&t2, NULL, decrease_fn, &val);
-	if (ret) {
-		perror_pthread(ret, "pthread_create");
-		exit(1);
-	}
+    if (ret) {
+        perror_pthread(ret, "pthread_create");
+        exit(1);
+    }
 
 	/*
 	 * Wait for threads to terminate
