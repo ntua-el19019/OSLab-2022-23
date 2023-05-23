@@ -228,9 +228,9 @@ int main(void)
 	printf(RED "\nStep 1: Print the virtual address space map of this "
 		"process [%d].\n" RESET, mypid);
 	press_enter();
-	/*
-	 * TODO: Write your code here to complete Step 1.
-	 */
+
+    show_maps();
+
 
 
 	/*
@@ -240,9 +240,16 @@ int main(void)
 	printf(RED "\nStep 2: Use mmap(2) to allocate a private buffer of "
 		"size equal to 1 page and print the VM map again.\n" RESET);
 	press_enter();
-	/*
-	 * TODO: Write your code here to complete Step 2.
-	 */
+
+
+    // Allocate memory for the buffer using mmap
+    heap_private_buf = mmap(NULL, buffer_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (heap_private_buf == MAP_FAILED) {
+        perror("mmap");
+        return 1;
+    }
+
+    show_va_info(heap_private_buf);
 
 
 	/*
@@ -252,10 +259,8 @@ int main(void)
 	printf(RED "\nStep 3: Find and print the physical address of the "
 		"buffer in main memory. What do you see?\n" RESET);
 	press_enter();
-	/*
-	 * TODO: Write your code here to complete Step 3.
-	 */
 
+    get_physical_address(heap_private_buf);
 
 	/*
 	 * Step 4: Write zeros to the buffer and repeat Step 3.
@@ -263,9 +268,18 @@ int main(void)
 	printf(RED "\nStep 4: Initialize your buffer with zeros and repeat "
 		"Step 3. What happened?\n" RESET);
 	press_enter();
-	/*
-	 * TODO: Write your code here to complete Step 4.
-	 */
+
+
+
+
+    // Allocate memory for the buffer using mmap
+    heap_private_buf = mmap(NULL, buffer_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (heap_private_buf == MAP_FAILED) {
+        perror("mmap");
+        return 1;
+    }
+    memset(heap_private_buf, 0, buffer_size);
+    get_physical_address(heap_private_buf);
 
 
 	/*
@@ -275,9 +289,19 @@ int main(void)
 	printf(RED "\nStep 5: Use mmap(2) to read and print file.txt. Print "
 		"the new mapping information that has been created.\n" RESET);
 	press_enter();
-	/*
-	 * TODO: Write your code here to complete Step 5.
-	 */
+
+    file_shared_buf = mmap(NULL, buffer_size, PROT_READ|PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (file_shared_buf == MAP_FAILED) {
+        perror("mmap");
+        return 1;
+    }
+
+    memset(file_shared_buf, 0, buffer_size);
+    FILE *f2 = fopen ("./file.txt", "w");
+    fwrite (file_shared_buf, sizeof(char), buffer_size, f2);
+    fclose (f2);
+
+    printf("File content: %s\n", (char*)file_shared_buf);
 
 
 	/*
