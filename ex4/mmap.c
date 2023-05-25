@@ -28,7 +28,6 @@
 
 char *heap_private_buf;
 char *heap_shared_buf;
-
 char *file_shared_buf;
 
 uint64_t buffer_size;
@@ -46,9 +45,8 @@ void child(void)
 	 */
 	if (0 != raise(SIGSTOP))
 		die("raise(SIGSTOP)");
-	/*
-	 * TODO: Write your code here to complete child's part of Step 7.
-	 */
+
+    show_maps();
 
 
 	/*
@@ -56,19 +54,18 @@ void child(void)
 	 */
 	if (0 != raise(SIGSTOP))
 		die("raise(SIGSTOP)");
-	/*
-	 * TODO: Write your code here to complete child's part of Step 8.
-	 */
 
+
+    printf("Physical Address of the private buffer of the child: %ld\n",
+           get_physical_address((uint64_t)heap_private_buf));
 
 	/*
 	 * Step 9 - Child
 	 */
 	if (0 != raise(SIGSTOP))
 		die("raise(SIGSTOP)");
-	/*
-	 * TODO: Write your code here to complete child's part of Step 9.
-	 */
+
+    memset(heap_private_buf, 0, buffer_size);
 
 
 	/*
@@ -76,141 +73,129 @@ void child(void)
 	 */
 	if (0 != raise(SIGSTOP))
 		die("raise(SIGSTOP)");
-	/*
-	 * TODO: Write your code here to complete child's part of Step 10.
-	 */
 
+    printf("Physical Address of the shared buffer of the child: %ld\n",
+           get_physical_address(heap_shared_buf));
 
 	/*
 	 * Step 11 - Child
 	 */
 	if (0 != raise(SIGSTOP))
 		die("raise(SIGSTOP)");
-	/*
-	 * TODO: Write your code here to complete child's part of Step 11.
-	 */
+
+    mprotect(heap_shared_buf,buffer_size,PROT_WRITE);
+    show_maps();
 
 
 	/*
 	 * Step 12 - Child
 	 */
-	/*
-	 * TODO: Write your code here to complete child's part of Step 12.
-	 */
+	free(heap_shared_buf);
 }
 
 /*
  * Parent process' entry point.
  */
-void parent(pid_t child_pid)
-{
-	uint64_t pa;
-	int status;
+void parent(pid_t child_pid) {
+    uint64_t pa;
+    int status;
 
-	/* Wait for the child to raise its first SIGSTOP. */
-	if (-1 == waitpid(child_pid, &status, WUNTRACED))
-		die("waitpid");
+    /* Wait for the child to raise its first SIGSTOP. */
+    if (-1 == waitpid(child_pid, &status, WUNTRACED))
+        die("waitpid");
 
-	/*
-	 * Step 7: Print parent's and child's maps. What do you see?
-	 * Step 7 - Parent
-	 */
-	printf(RED "\nStep 7: Print parent's and child's map.\n" RESET);
-	press_enter();
+    /*
+     * Step 7: Print parent's and child's maps. What do you see?
+     * Step 7 - Parent
+     */
+    printf(RED "\nStep 7: Print parent's and child's map.\n" RESET);
+    press_enter();
 
-	/*
-	 * TODO: Write your code here to complete parent's part of Step 7.
-	 */
+    show_maps();
 
-	if (-1 == kill(child_pid, SIGCONT))
-		die("kill");
-	if (-1 == waitpid(child_pid, &status, WUNTRACED))
-		die("waitpid");
+    if (-1 == kill(child_pid, SIGCONT))
+        die("kill");
+    if (-1 == waitpid(child_pid, &status, WUNTRACED))
+        die("waitpid");
 
 
-	/*
-	 * Step 8: Get the physical memory address for heap_private_buf.
-	 * Step 8 - Parent
-	 */
-	printf(RED "\nStep 8: Find the physical address of the private heap "
-		"buffer (main) for both the parent and the child.\n" RESET);
-	press_enter();
+    /*
+     * Step 8: Get the physical memory address for heap_private_buf.
+     * Step 8 - Parent
+     */
+    printf(RED "\nStep 8: Find the physical address of the private heap "
+           "buffer (main) for both the parent and the child.\n" RESET);
+    press_enter();
 
-	/*
-	 * TODO: Write your code here to complete parent's part of Step 8.
-	 */
-
-	if (-1 == kill(child_pid, SIGCONT))
-		die("kill");
-	if (-1 == waitpid(child_pid, &status, WUNTRACED))
-		die("waitpid");
+    printf("Physical Address of the private buffer of the parent: %ld\n",
+           get_physical_address((uint64_t) heap_private_buf));
 
 
-	/*
-	 * Step 9: Write to heap_private_buf. What happened?
-	 * Step 9 - Parent
-	 */
-	printf(RED "\nStep 9: Write to the private buffer from the child and "
-		"repeat step 8. What happened?\n" RESET);
-	press_enter();
-
-	/*
-	 * TODO: Write your code here to complete parent's part of Step 9.
-	 */
-
-	if (-1 == kill(child_pid, SIGCONT))
-		die("kill");
-	if (-1 == waitpid(child_pid, &status, WUNTRACED))
-		die("waitpid");
+    if (-1 == kill(child_pid, SIGCONT))
+        die("kill");
+    if (-1 == waitpid(child_pid, &status, WUNTRACED))
+        die("waitpid");
 
 
-	/*
-	 * Step 10: Get the physical memory address for heap_shared_buf.
-	 * Step 10 - Parent
-	 */
-	printf(RED "\nStep 10: Write to the shared heap buffer (main) from "
-		"child and get the physical address for both the parent and "
-		"the child. What happened?\n" RESET);
-	press_enter();
+    /*
+     * Step 9: Write to heap_private_buf. What happened?
+     * Step 9 - Parent
+     */
+    printf(RED "\nStep 9: Write to the private buffer from the child and "
+           "repeat step 8. What happened?\n" RESET);
+    press_enter();
 
-	/*
-	 * TODO: Write your code here to complete parent's part of Step 10.
-	 */
-
-	if (-1 == kill(child_pid, SIGCONT))
-		die("kill");
-	if (-1 == waitpid(child_pid, &status, WUNTRACED))
-		die("waitpid");
+    printf("Physical Address of the private buffer of the parent: %ld\n",
+           get_physical_address(heap_private_buf));
 
 
-	/*
-	 * Step 11: Disable writing on the shared buffer for the child
-	 * (hint: mprotect(2)).
-	 * Step 11 - Parent
-	 */
-	printf(RED "\nStep 11: Disable writing on the shared buffer for the "
-		"child. Verify through the maps for the parent and the "
-		"child.\n" RESET);
-	press_enter();
-
-	/*
-	 * TODO: Write your code here to complete parent's part of Step 11.
-	 */
-
-	if (-1 == kill(child_pid, SIGCONT))
-		die("kill");
-	if (-1 == waitpid(child_pid, &status, 0))
-		die("waitpid");
+    if (-1 == kill(child_pid, SIGCONT))
+        die("kill");
+    if (-1 == waitpid(child_pid, &status, WUNTRACED))
+        die("waitpid");
 
 
-	/*
-	 * Step 12: Free all buffers for parent and child.
-	 * Step 12 - Parent
-	 */
+    /*
+     * Step 10: Get the physical memory address for heap_shared_buf.
+     * Step 10 - Parent
+     */
+    printf(RED "\nStep 10: Write to the shared heap buffer (main) from "
+           "child and get the physical address for both the parent and "
+           "the child. What happened?\n" RESET);
+    press_enter();
 
-	/*
-	 * TODO: Write your code here to complete parent's part of Step 12.
-	 */
+    printf("Physical Address of the shared buffer of the parent: %ld\n",
+           get_physical_address(heap_shared_buf));
+
+    if (-1 == kill(child_pid, SIGCONT))
+        die("kill");
+    if (-1 == waitpid(child_pid, &status, WUNTRACED))
+        die("waitpid");
+
+
+    /*
+     * Step 11: Disable writing on the shared buffer for the child
+     * (hint: mprotect(2)).
+     * Step 11 - Parent
+     */
+    printf(RED "\nStep 11: Disable writing on the shared buffer for the "
+           "child. Verify through the maps for the parent and the "
+           "child.\n" RESET);
+    press_enter();
+
+    mprotect(heap_shared_buf, buffer_size, PROT_WRITE);
+    show_maps();
+
+    if (-1 == kill(child_pid, SIGCONT))
+        die("kill");
+    if (-1 == waitpid(child_pid, &status, 0))
+        die("waitpid");
+
+
+    /*
+     * Step 12: Free all buffers for parent and child.
+     * Step 12 - Parent
+     */
 }
 
 int main(void)
@@ -260,7 +245,9 @@ int main(void)
 		"buffer in main memory. What do you see?\n" RESET);
 	press_enter();
 
-    get_physical_address(heap_private_buf);
+    printf("Physical Address of the buffer: %ld\n",
+           get_physical_address(heap_private_buf));
+
 
 	/*
 	 * Step 4: Write zeros to the buffer and repeat Step 3.
@@ -273,14 +260,20 @@ int main(void)
 
 
     // Allocate memory for the buffer using mmap
-    heap_private_buf = mmap(NULL, buffer_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+//    heap_private_buf = mmap(NULL, buffer_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (heap_private_buf == MAP_FAILED) {
         perror("mmap");
         return 1;
     }
-    memset(heap_private_buf, 0, buffer_size);
-    get_physical_address(heap_private_buf);
 
+    memset(heap_private_buf, 0, buffer_size);
+//    int i;
+//    for (i=0; i<(int)buffer_size; i++) {
+//        heap_private_buf[i]=0;}
+    printf("Physical Address of the buffer: %ld\n",
+           get_physical_address(heap_private_buf));
+
+    munmap(heap_private_buf, buffer_size);
 
 	/*
 	 * Step 5: Use mmap(2) to map file.txt (memory-mapped files) and print
@@ -290,18 +283,19 @@ int main(void)
 		"the new mapping information that has been created.\n" RESET);
 	press_enter();
 
-    file_shared_buf = mmap(NULL, buffer_size, PROT_READ|PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    int f2;
+    f2 = open ("file.txt", O_RDONLY);
+    if (f2 == -1) {
+        perror("fopen");
+        return 1;
+    }
+
+    file_shared_buf = mmap(NULL, buffer_size, PROT_READ,MAP_PRIVATE, f2, 0);
     if (file_shared_buf == MAP_FAILED) {
         perror("mmap");
         return 1;
     }
-
-    memset(file_shared_buf, 0, buffer_size);
-    FILE *f2 = fopen ("./file.txt", "w");
-    fwrite (file_shared_buf, sizeof(char), buffer_size, f2);
-    fclose (f2);
-
-    printf("File content: %s\n", (char*)file_shared_buf);
+    printf("%s\n", file_shared_buf);
 
 
 	/*
@@ -312,12 +306,17 @@ int main(void)
 		"equal to 1 page. Initialize the buffer and print the new "
 		"mapping information that has been created.\n" RESET);
 	press_enter();
-	/*
-	 * TODO: Write your code here to complete Step 6.
-	 */
+
+    heap_shared_buf= mmap(NULL,buffer_size, PROT_READ| PROT_WRITE,MAP_SHARED| MAP_ANONYMOUS,-1,0);
+
+    int i;
+    for(i=0; i<(int)buffer_size; i++) {
+        heap_shared_buf[i]=i;
+    }
 
 
-	p = fork();
+
+    p = fork();
 	if (p < 0)
 		die("fork");
 	if (p == 0) {
