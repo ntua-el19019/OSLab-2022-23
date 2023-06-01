@@ -314,6 +314,8 @@ int main(void)
 
     memset(heap_shared_buf,0,buffer_size);
 
+    show_maps();
+
 
 
     p = fork();
