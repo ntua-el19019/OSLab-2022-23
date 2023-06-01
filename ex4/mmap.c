@@ -299,6 +299,8 @@ int main(void)
     }
     printf("%s\n", file_shared_buf);
 
+    show_maps();
+
 	/*
 	 * Step 6: Use mmap(2) to allocate a shared buffer of 1 page. Use
 	 * heap_shared_buf.
