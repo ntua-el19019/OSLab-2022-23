@@ -69,6 +69,8 @@ void child(void)
 
     memset(heap_private_buf, 0, buffer_size);
 
+    printf("Physical Address of the private buffer of the child: %ld\n",
+           get_physical_address((uint64_t)heap_private_buf));
 
 	/*
 	 * Step 10 - Child
@@ -76,8 +78,9 @@ void child(void)
 	if (0 != raise(SIGSTOP))
 		die("raise(SIGSTOP)");
 
+    memset(heap_shared_buf, 0, buffer_size);
     printf("Physical Address of the shared buffer of the child: %ld\n",
-           get_physical_address((uint64_t) heap_private_buf));
+           get_physical_address((uint64_t) heap_shared_buf));
 
 	/*
 	 * Step 11 - Child
