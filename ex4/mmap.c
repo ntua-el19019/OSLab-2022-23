@@ -23,6 +23,7 @@
 #include "help.h"
 
 #define RED     "\033[31m"
+#define GREEN   "\033[32m"      /* Green */
 #define RESET   "\033[0m"
 
 
@@ -46,6 +47,7 @@ void child(void)
 	if (0 != raise(SIGSTOP))
 		die("raise(SIGSTOP)");
 
+    printf(GREEN "\n Child's map: \n" RESET);
     show_maps();
 
 
@@ -86,6 +88,7 @@ void child(void)
     mprotect(heap_shared_buf,buffer_size,PROT_READ);
 
     show_va_info((uint64_t)heap_shared_buf);
+    printf(GREEN "\n Child's map: \n" RESET);
     show_maps();
 
 
@@ -115,6 +118,7 @@ void parent(pid_t child_pid) {
     printf(RED "\nStep 7: Print parent's and child's map.\n" RESET);
     press_enter();
 
+    printf(GREEN "\n Parent's map: \n" RESET);
     show_maps();
 
     if (-1 == kill(child_pid, SIGCONT))
@@ -189,6 +193,7 @@ void parent(pid_t child_pid) {
     press_enter();
 
     show_va_info((uint64_t)heap_shared_buf);
+    printf(GREEN "\n Parent's map: \n" RESET);
     show_maps();
 
     if (-1 == kill(child_pid, SIGCONT))
