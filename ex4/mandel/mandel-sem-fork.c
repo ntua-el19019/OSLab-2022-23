@@ -170,7 +170,7 @@ void destroy_shared_memory_area(void *addr, unsigned int numbytes) {
 
 int main(int argc, char *argv[])
 {
-    pid_t root;
+    pid_t procs;
     int NPROCS;
     int i;
     /* The number of threads is read from the program's arguments */
@@ -204,12 +204,12 @@ int main(int argc, char *argv[])
      */
 
     for (i=0; i<NPROCS; i++){
-        root=fork();
-        if (root < 0) {
+        procs=fork();
+        if (procs < 0) {
             perror("main: fork");
             exit(1);
         }
-        if (root == 0) {
+        if (procs == 0) {
             compute_and_output_mandel_line(i,NPROCS);
             exit(10);
         }
